@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Budgetkalkyl</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#eef2f5;margin:0;padding:20px}
+.wrap{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+h1{text-align:center}
+.grid{display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center}
+input{padding:8px}
+.summary{margin-top:20px;background:#f5f7fa;padding:15px;border-radius:8px}
+button{padding:10px 14px;margin:8px 4px;border:none;border-radius:6px;background:#1565c0;color:#fff;cursor:pointer}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+@media print{button{display:none}body{background:#fff}.wrap{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Budgetkalkyl</h1>
+
+<h2>Inkomster</h2>
+<div class="grid">
+<label>Lön</label><input type="number" id="lon" value="0">
+<label>Övriga inkomster</label><input type="number" id="extra" value="0">
+</div>
+
+<h2>Utgifter</h2>
+<div class="grid">
+<label>Boende</label><input type="number" id="boende" value="0">
+<label>Mat</label><input type="number" id="mat" value="0">
+<label>Transport</label><input type="number" id="transport" value="0">
+<label>Mobil/Internet</label><input type="number" id="mobil" value="0">
+<label>Streaming</label><input type="number" id="stream" value="0">
+<label>Sparande</label><input type="number" id="spar" value="0">
+<label>Övrigt</label><input type="number" id="ovrigt" value="0">
+</div>
+
+<div class="summary">
+<p><b>Totala inkomster:</b> <span id="inkomst">0</span> kr</p>
+<p><b>Totala utgifter:</b> <span id="utgift">0</span> kr</p>
+<p><b>Kvar:</b> <span id="kvar">0</span> kr</p>
+<p><b>Spargrad:</b> <span id="spargrad">0</span>%</p>
+</div>
+
+<button onclick="calc()">Beräkna</button>
+<button onclick="exportExcel()">Exportera till Excel (.xlsx)</button>
+<button onclick="window.print()">Skriv ut / PDF</button>
+
+</div>
+
+<script>
+function val(id){return Number(document.getElementById(id).value)||0;}
+function fmt(n){return n.toLocaleString("sv-SE");}
+function calc(){
+ let inkomster=val("lon")+val("extra");
+ let utgifter=val("boende")+val("mat")+val("transport")+val("mobil")+val("stream")+val("spar")+val("ovrigt");
+ let kvar=inkomster-utgifter;
+ let sg=inkomster?((kvar/inkomster)*100).toFixed(1):0;
+ document.getElementById("inkomst").textContent=fmt(inkomster);
+ document.getElementById("utgift").textContent=fmt(utgifter);
+ document.getElementById("kvar").textContent=fmt(kvar);
+ document.getElementById("spargrad").textContent=sg;
+}
+document.querySelectorAll("input").forEach(e=>e.addEventListener("input",calc));
+function exportExcel(){
+ const rows=[
+ ["Kategori","Belopp"],
+ ["Lön",val("lon")],
+ ["Övriga inkomster",val("extra")],
+ ["Boende",val("boende")],
+ ["Mat",val("mat")],
+ ["Transport",val("transport")],
+ ["Mobil/Internet",val("mobil")],
+ ["Streaming",val("stream")],
+ ["Sparande",val("spar")],
+ ["Övrigt",val("ovrigt")],
+ [],
+ ["Totala inkomster",document.getElementById("inkomst").textContent],
+ ["Totala utgifter",document.getElementById("utgift").textContent],
+ ["Kvar",document.getElementById("kvar").textContent],
+ ["Spargrad %",document.getElementById("spargrad").textContent]
+ ];
+ const wb=XLSX.utils.book_new();
+ const ws=XLSX.utils.aoa_to_sheet(rows);
+ ws["!cols"]=[{wch:25},{wch:18}];
+ XLSX.utils.book_append_sheet(wb,ws,"Budget");
+ XLSX.writeFile(wb,"budgetkalkyl.xlsx");
+}
+calc();
+</script>
+</body>
+</html>
